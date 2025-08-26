@@ -19,29 +19,30 @@ app.get("/", function (req, res) {
 });
 
 app.get("/api/:date?", function (req, res) {
+  const dateParam = req.params.date;
 
-  // Check for no additional route parameter
-  if (!req.params.date) {
-    const now = new Date();
-    return res.json({ unix: `${now.getTime()}`, utc: `${now.toUTCString()}` });
+  const response = (date) => res.json({ unix: date.getTime(), utc: date.toUTCString() });
+  
+  // If no date parameter, return current time
+  if (!dateParam) {
+    return response(new Date());
   }
 
-  if (Number(req.params.date)) {
-    const ms = Number(req.params.date);
+  // Milliseconds parameter (e.g. "1451001600000", "-123456789")
+  if (/^-?\d+$/.test(dateParam)) {
+    const ms = Number(dateParam);
     const date = new Date(ms);
-    return res.json({ unix: `${date.getTime()}`, utc: `${date.toUTCString()}` });
+    return response(date);
   }
 
-  const date = new Date(req.params.date);
+  // Otherwise parse as date string
+  const date = new Date(dateParam);
   if (isNaN(date.getTime())) {
     return res.json({ error: 'Invalid Date' });
   } else {
-    return res.json({ unix: `${date.getTime()}`, utc: `${date.toUTCString()}` });
+    return response(date);
   }
-  
 });
-
-
 
 // Listen on port set in environment variable or default to 3000
 var listener = app.listen(process.env.PORT || 3000, function () {
